@@ -14,7 +14,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/anirudhatalmale6-alt/companion-module-streamgraphics-pro.git"
+    "url": "git+https://github.com/moishe64/companion-module-streamgraphics-pro.git"
   },
   "dependencies": {
     "@companion-module/base": "^1.14.1"

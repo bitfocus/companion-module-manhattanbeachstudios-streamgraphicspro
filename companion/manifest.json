@@ -1,37 +1,37 @@
 {
-  "$schema": "https://raw.githubusercontent.com/bitfocus/companion-module-base/main/assets/manifest.schema.json",
-  "type": "connection",
-  "id": "streamgraphics-pro",
-  "name": "streamgraphics-pro",
-  "shortname": "StreamGraphics Pro",
-  "description": "Live broadcast graphics — lower thirds, scoreboards, timers and slides. Runs on the show computer; drive it from Companion.",
-  "version": "1.1.0",
-  "license": "MIT",
-  "repository": "https://github.com/anirudhatalmale6-alt/companion-module-streamgraphics-pro",
-  "bugs": "https://github.com/anirudhatalmale6-alt/companion-module-streamgraphics-pro/issues",
-  "maintainers": [
-    {
-      "name": "Manhattan Beach Studios LLC",
-      "email": "mark@streamgraphicspro.com"
-    }
-  ],
-  "legacyIds": [],
-  "runtime": {
-    "type": "node22",
-    "api": "nodejs-ipc",
-    "apiVersion": "1.14.1",
-    "entrypoint": "../main.js"
-  },
-  "manufacturer": "Manhattan Beach Studios",
-  "products": [
-    "StreamGraphics Pro"
-  ],
-  "keywords": [
-    "Graphics",
-    "Scoreboard",
-    "Timer",
-    "Lower third",
-    "OBS",
-    "vMix"
-  ]
+	"$schema": "https://raw.githubusercontent.com/bitfocus/companion-module-base/main/assets/manifest.schema.json",
+	"type": "connection",
+	"id": "streamgraphics-pro",
+	"name": "streamgraphics-pro",
+	"shortname": "StreamGraphics Pro",
+	"description": "Live broadcast graphics \u2014 lower thirds, scoreboards, timers and slides. Runs on the show computer; drive it from Companion.",
+	"version": "1.1.0",
+	"license": "MIT",
+	"repository": "https://github.com/moishe64/companion-module-streamgraphics-pro",
+	"bugs": "https://github.com/moishe64/companion-module-streamgraphics-pro/issues",
+	"maintainers": [
+		{
+			"name": "Manhattan Beach Studios LLC",
+			"email": "mark@streamgraphicspro.com"
+		}
+	],
+	"legacyIds": [],
+	"runtime": {
+		"type": "node22",
+		"api": "nodejs-ipc",
+		"apiVersion": "1.14.1",
+		"entrypoint": "../main.js"
+	},
+	"manufacturer": "Manhattan Beach Studios",
+	"products": [
+		"StreamGraphics Pro"
+	],
+	"keywords": [
+		"Graphics",
+		"Scoreboard",
+		"Timer",
+		"Lower third",
+		"OBS",
+		"vMix"
+	]
 }
