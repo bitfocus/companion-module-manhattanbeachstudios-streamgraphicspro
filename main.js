@@ -9,7 +9,7 @@ class StreamGraphicsProInstance extends InstanceBase {
 	async init(config) {
 		this.config = config
 		this.state = {}
-		this.choices = { presets: [], scoreboards: [] }
+		this.choices = { presets: [], scoreboards: [], marks: [] }
 		this.connected = false
 		this.appVersion = ''
 		this.clockOffset = 0
@@ -23,7 +23,13 @@ class StreamGraphicsProInstance extends InstanceBase {
 		// The clock has to move between state pushes, or a timer variable on a button
 		// would sit frozen until something else in the app changed.
 		this.ticker = setInterval(() => {
-			if (this.connected) updateVariableValues(this)
+			if (!this.connected) return
+			updateVariableValues(this)
+			/* 🚨 And the same is true of the section feedback. A rolling script crosses from one
+			   bookmark into the next WITHOUT the app sending anything — position is an anchor plus
+			   a speed, so nothing changes server-side as the read moves. Without this, the section
+			   button would light up only when the operator happened to press something else. */
+			if (this.state.prompter?.running) this.checkFeedbacks('prompter_at_mark')
 		}, 250)
 	}
 
@@ -101,6 +107,7 @@ class StreamGraphicsProInstance extends InstanceBase {
 		const key = JSON.stringify([
 			(state.shows ?? []).map((s) => s.name),
 			(state.scoreboards ?? []).map((b) => b.name),
+			(state.prompter?.geom?.marks ?? []).map((m) => m.name),
 		])
 		if (key !== this.namesKey) {
 			this.namesKey = key
@@ -123,6 +130,9 @@ class StreamGraphicsProInstance extends InstanceBase {
 		this.choices = {
 			presets: (this.state.shows ?? []).map((s) => ({ id: s.name, label: s.name })),
 			scoreboards: (this.state.scoreboards ?? []).map((b) => ({ id: b.name, label: b.name })),
+			// Bookmarks are the ## headings in the script, so they appear and vanish as the script
+			// is edited. Addressed by name everywhere, which is why the id IS the name.
+			marks: (this.state.prompter?.geom?.marks ?? []).map((m) => ({ id: m.name, label: m.name })),
 		}
 		updateActions(this)
 		updateFeedbacks(this)

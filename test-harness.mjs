@@ -26,6 +26,7 @@ const self = {
 	connected: false,
 	appVersion: '',
 	clockOffset: 0,
+	namesKey: '',
 	actions: {},
 	feedbacks: {},
 	presets: {},
@@ -43,16 +44,27 @@ const self = {
 		try { await this.api.send(path); return true } catch (e) { console.log(`   command FAILED ${path}: ${e.message}`); return false }
 	},
 	onDisconnected(why) { this.connected = false; console.log(`   disconnected: ${why}`) },
+	pushes: 0,
 	onState(state, version) {
 		this.connected = true
+		this.pushes++
 		this.state = state
 		this.appVersion = version || ''
 		this.choices = {
 			presets: (state.shows ?? []).map((s) => ({ id: s.name, label: s.name })),
 			scoreboards: (state.scoreboards ?? []).map((b) => ({ id: b.name, label: b.name })),
+			marks: (state.prompter?.geom?.marks ?? []).map((m) => ({ id: m.name, label: m.name })),
 		}
-		if (!this.built) {
-			this.built = true
+		/* Rebuild when the NAMES change, exactly as main.js does. Bookmarks arrive late — they
+		   do not exist until a prompter screen has measured the script — so a harness that built
+		   its definitions once at connect would test a module that had never seen a bookmark. */
+		const key = JSON.stringify([
+			this.choices.presets.map((c) => c.id),
+			this.choices.scoreboards.map((c) => c.id),
+			this.choices.marks.map((c) => c.id),
+		])
+		if (key !== this.namesKey) {
+			this.namesKey = key
 			updateActions(this); updateFeedbacks(this); updatePresets(this); updateVariableDefinitions(this)
 		}
 		updateVariableValues(this)
@@ -228,6 +240,109 @@ if (!bulPreset) {
 
 	await self.actions.bullets_blank.callback({ options: { name: bulPreset.name, layer: '' } })
 	await nextState()
+}
+
+// --- teleprompter ---------------------------------------------------------------------
+// Needs a prompter OUTPUT screen open somewhere, because that is what measures the script and
+// tells the app where the bookmarks are. Without one there is no length and no bookmarks, and
+// the module is right to show nothing — so that case is asserted rather than skipped.
+{
+	ok('prompter actions exist', !!self.actions.prompter_play && !!self.actions.prompter_mark,
+		`${Object.keys(self.actions).filter((k) => k.startsWith('prompter_')).length} prompter actions`)
+	ok('prompter feedbacks exist', !!self.feedbacks.prompter_visible && !!self.feedbacks.prompter_at_mark)
+
+	await self.actions.prompter_air.callback({ options: {} })
+	await nextState()
+	ok('prompter on air', self.vars.prompter_onair === 'ON AIR', String(self.vars.prompter_onair))
+	ok('on-air feedback true', self.feedbacks.prompter_visible.callback({}) === true)
+
+	await self.actions.prompter_pause.callback({ options: {} })
+	await self.actions.prompter_top.callback({ options: {} })
+	await nextState()
+	ok('holding reads as holding', self.vars.prompter_state === 'holding', String(self.vars.prompter_state))
+	ok('rolling feedback false while held', self.feedbacks.prompter_running.callback({}) === false)
+
+	// speed
+	await self.actions.prompter_speed.callback({ options: { value: '60' } })
+	await nextState()
+	ok('speed can be set outright', Number(self.vars.prompter_speed) === 60, String(self.vars.prompter_speed))
+	await self.actions.prompter_faster.callback({ options: { by: '10' } })
+	await nextState()
+	ok('speed up adds to it', Number(self.vars.prompter_speed) === 70, String(self.vars.prompter_speed))
+	await self.actions.prompter_slower.callback({ options: { by: '10' } })
+	await nextState()
+	ok('slow down takes it off again', Number(self.vars.prompter_speed) === 60, String(self.vars.prompter_speed))
+
+	const marks = self.state.prompter?.geom?.marks ?? []
+	if (!marks.length) {
+		ok('with no script measured, no section is claimed', self.vars.prompter_section === '' && self.vars.prompter_sections === 0,
+			`section=${JSON.stringify(self.vars.prompter_section)} of ${self.vars.prompter_sections}`)
+		ok('and no percentage is invented', self.vars.prompter_percent === '', String(self.vars.prompter_percent))
+		console.log('   SKIPPED bookmark round trip — open /prompter-output with a script loaded to cover it')
+	} else {
+		ok('bookmarks became dropdown choices', self.choices.marks.length === marks.length,
+			self.choices.marks.map((c) => c.id).join(' | '))
+		ok('a button was built for each bookmark',
+			marks.every((m) => !!self.presets[`prompter_mark_${m.name.trim().toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '')}`]))
+		ok('sections counted', Number(self.vars.prompter_sections) === marks.length, String(self.vars.prompter_sections))
+
+		// Jump by NAME to each one in turn, and check the section readout follows.
+		for (const m of marks) {
+			await self.actions.prompter_mark.callback({ options: { name: m.name } })
+			await nextState()
+			updateVariableValues(self)
+			ok(`jump to "${m.name}" lands there`, self.vars.prompter_section === m.name, String(self.vars.prompter_section))
+			ok(`…and only that section's button lights up`,
+				marks.every((x) => self.feedbacks.prompter_at_mark.callback({ options: { name: x.name } }) === (x.name === m.name)))
+		}
+
+		// A name that no longer exists must fail loudly rather than jumping somewhere arbitrary.
+		const bad = await self.command('/api/prompter/mark?name=' + encodeURIComponent('a section that was cut'))
+		ok('a bookmark that no longer exists fails cleanly instead of jumping somewhere else', bad === false)
+
+		// next / prev walk the sections
+		await self.actions.prompter_top.callback({ options: {} })
+		await nextState()
+		await self.actions.prompter_nextmark.callback({ options: {} })
+		await nextState()
+		updateVariableValues(self)
+		ok('next bookmark steps forward', Number(self.vars.prompter_section_n) >= 1, String(self.vars.prompter_section_n))
+
+		/* 🚨 The one that needed the extra ticker in main.js: with the script ROLLING, the app
+		   sends nothing at all as the read crosses from one section into the next. If the module
+		   only recalculated on a state push, the section readout would stick on the section the
+		   operator last jumped to for the whole show. */
+		await self.actions.prompter_mark.callback({ options: { name: marks[0].name } })
+		await nextState()
+		await self.actions.prompter_speed.callback({ options: { value: '4000' } })
+		await self.actions.prompter_play.callback({ options: {} })
+		await nextState()
+		ok('rolling reads as rolling', self.vars.prompter_state === 'rolling', String(self.vars.prompter_state))
+		ok('rolling feedback true', self.feedbacks.prompter_running.callback({}) === true)
+		const wasSection = self.vars.prompter_section
+		const wasPct = self.vars.prompter_percent
+		const pushes = self.pushes
+		await sleep(1500)
+		updateVariableValues(self)     // no state push in between — this is the whole point
+		ok('the position moves between state pushes', self.vars.prompter_percent !== wasPct,
+			`${wasPct}% -> ${self.vars.prompter_percent}%  (${self.pushes - pushes} pushes in that time)`)
+		if (marks.length > 1) {
+			ok('and the section follows the read across a bookmark without the app saying anything',
+				self.vars.prompter_section !== wasSection, `${wasSection} -> ${self.vars.prompter_section}`)
+		}
+		ok('time left is reported while rolling', /^\d+:\d\d/.test(String(self.vars.prompter_left)), String(self.vars.prompter_left))
+
+		await self.actions.prompter_pause.callback({ options: {} })
+		await self.actions.prompter_speed.callback({ options: { value: '60' } })
+		await self.actions.prompter_top.callback({ options: {} })
+		await nextState()
+	}
+
+	// Off air must not stop the scroll, and holding must not take it off air — they are separate.
+	await self.actions.prompter_off.callback({ options: {} })
+	await nextState()
+	ok('prompter off air', self.vars.prompter_onair === 'off', String(self.vars.prompter_onair))
+	ok('off-air feedback false', self.feedbacks.prompter_visible.callback({}) === false)
 }
 
 self.api.close()

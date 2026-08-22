@@ -292,5 +292,124 @@ export function updatePresets(self) {
 		feedbacks: [],
 	}
 
+	// ---- teleprompter ----
+	// Laid out the way the panel in the app is laid out: on air and roll/hold first, then the
+	// speed pair, then where-you-are. An operator who has used one should recognise the other.
+	const PR = 'Teleprompter'
+	presets['prompter_air'] = {
+		type: 'button',
+		category: PR,
+		name: 'Teleprompter on / off air',
+		style: style('PROMPT\noff air', DARK, WHITE, '7'),
+		// Two steps rather than one toggle action: the app has no single "toggle on air" command,
+		// and a button that lies about its state is worse than one extra press.
+		steps: [
+			{ down: [{ actionId: 'prompter_air', options: {} }], up: [] },
+			{ down: [{ actionId: 'prompter_off', options: {} }], up: [] },
+		],
+		feedbacks: [{ feedbackId: 'prompter_visible', options: {}, style: { bgcolor: RED, color: WHITE, text: 'PROMPT\nON AIR' } }],
+	}
+	presets['prompter_rollhold'] = {
+		type: 'button',
+		category: PR,
+		name: 'Roll / hold the script',
+		style: style('ROLL\n$(streamgraphics-pro:prompter_percent)%', DARK, WHITE, '14'),
+		steps: [{ down: [{ actionId: 'prompter_toggle', options: {} }], up: [] }],
+		feedbacks: [
+			{
+				feedbackId: 'prompter_running',
+				options: {},
+				style: { bgcolor: GREEN, color: BLACK, text: 'HOLD\n$(streamgraphics-pro:prompter_percent)%' },
+			},
+		],
+	}
+	presets['prompter_faster'] = {
+		type: 'button',
+		category: PR,
+		name: 'Speed up',
+		style: style('FASTER\n$(streamgraphics-pro:prompter_speed)', DARK, WHITE, '7'),
+		steps: [{ down: [{ actionId: 'prompter_faster', options: { by: '5' } }], up: [] }],
+		feedbacks: [],
+	}
+	presets['prompter_slower'] = {
+		type: 'button',
+		category: PR,
+		name: 'Slow down',
+		style: style('SLOWER\n$(streamgraphics-pro:prompter_speed)', DARK, WHITE, '7'),
+		steps: [{ down: [{ actionId: 'prompter_slower', options: { by: '5' } }], up: [] }],
+		feedbacks: [],
+	}
+	presets['prompter_back'] = {
+		type: 'button',
+		category: PR,
+		name: 'Nudge back',
+		style: style('▲\nBACK', DARK, WHITE, '14'),
+		steps: [{ down: [{ actionId: 'prompter_back', options: {} }], up: [] }],
+		feedbacks: [],
+	}
+	presets['prompter_ahead'] = {
+		type: 'button',
+		category: PR,
+		name: 'Nudge ahead',
+		style: style('▼\nAHEAD', DARK, WHITE, '14'),
+		steps: [{ down: [{ actionId: 'prompter_ahead', options: {} }], up: [] }],
+		feedbacks: [],
+	}
+	presets['prompter_top'] = {
+		type: 'button',
+		category: PR,
+		name: 'Back to the top',
+		style: style('TOP', AMBER, BLACK, '14'),
+		steps: [{ down: [{ actionId: 'prompter_top', options: {} }], up: [] }],
+		feedbacks: [],
+	}
+	presets['prompter_nextmark'] = {
+		type: 'button',
+		category: PR,
+		name: 'Next section',
+		style: style('SECT ▶\n$(streamgraphics-pro:prompter_section)', DARK, WHITE, '7'),
+		steps: [{ down: [{ actionId: 'prompter_nextmark', options: {} }], up: [] }],
+		feedbacks: [],
+	}
+	presets['prompter_prevmark'] = {
+		type: 'button',
+		category: PR,
+		name: 'Previous section',
+		style: style('◀ SECT\n$(streamgraphics-pro:prompter_section)', DARK, WHITE, '7'),
+		steps: [{ down: [{ actionId: 'prompter_prevmark', options: {} }], up: [] }],
+		feedbacks: [],
+	}
+	// A read-only button. Worth having its own: on a long script the number an operator wants
+	// during a read is how much is LEFT, and there is nowhere else on the desk showing it.
+	presets['prompter_where'] = {
+		type: 'button',
+		category: PR,
+		name: 'Where the read is (no action)',
+		style: style(
+			'$(streamgraphics-pro:prompter_section)\n$(streamgraphics-pro:prompter_percent)%\n-$(streamgraphics-pro:prompter_left)',
+			DARK,
+			WHITE,
+			'7'
+		),
+		steps: [{ down: [], up: [] }],
+		feedbacks: [],
+	}
+
+	// One button per bookmark, generated from the script that is loaded — the same idea as the
+	// number keys on the panel, but with the section that is being read lit up.
+	for (const m of self.state.prompter?.geom?.marks ?? []) {
+		if (!m?.name) continue
+		presets[`prompter_mark_${slug(m.name)}`] = {
+			type: 'button',
+			category: 'Teleprompter — sections',
+			name: `Jump to “${m.name}”`,
+			style: style(m.name, DARK, WHITE, '7'),
+			steps: [{ down: [{ actionId: 'prompter_mark', options: { name: m.name } }], up: [] }],
+			feedbacks: [
+				{ feedbackId: 'prompter_at_mark', options: { name: m.name }, style: { bgcolor: AMBER, color: BLACK } },
+			],
+		}
+	}
+
 	self.setPresetDefinitions(presets)
 }

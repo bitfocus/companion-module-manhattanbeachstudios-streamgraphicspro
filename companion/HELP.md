@@ -1,7 +1,7 @@
 ## StreamGraphics Pro
 
 Drive StreamGraphics Pro from Companion — graphics on and off air, scoreboards,
-the presenter timer, and baseball/softball.
+the presenter timer, baseball/softball, and the teleprompter.
 
 ### Setting it up
 
@@ -28,6 +28,8 @@ module reads your app and generates buttons that are already wired up:
 - a **Library presets** category with a toggle for every saved graphic, plus
   next/previous row buttons for any preset with a spreadsheet attached
 - **Presenter timer** and **Baseball / softball** categories
+- a **Teleprompter** category, plus **Teleprompter — sections** holding one jump
+  button per heading in the script that's loaded
 
 If you rename something in the app, or add a court, the actions, buttons and
 variables follow automatically — no reconnect needed.
@@ -50,8 +52,34 @@ last pressed:
 - **Scoreboard is on air** — red while that board is showing
 - **Presenter timer is on air / is running**
 - **Baseball board is on air**
+- **Teleprompter is on air / is rolling** — red when the script is being shown,
+  green while it's actually moving
+- **Teleprompter is in this section** — lights whichever section button the read
+  has reached, so you can see where the presenter is without looking away
 - **Connected to StreamGraphics Pro** — put this on a spare button. It goes green
   when the link is healthy. Worth a glance before you go live.
+
+### The teleprompter
+
+Two things that are easy to confuse, so the actions spell them out:
+
+- **on air / off air** — whether the script is being shown at all
+- **roll / hold** — whether it's moving
+
+Holding the script doesn't take it off the presenter's screen, and taking it off
+air doesn't stop the scroll. They're separate on purpose.
+
+Jump buttons are addressed by the **heading name**, not by number. A script gets
+rewritten an hour before the show and every section shifts; a button aimed at
+"Half time" still lands on half time, where a button aimed at "section 4" would
+quietly send the read to the wrong place.
+
+Bookmarks only appear once a prompter screen has been opened at least once —
+that's what measures the script. Until then the section and percentage variables
+are deliberately blank rather than showing a made-up zero.
+
+The **Where the read is** preset is a button with no action on it: section,
+percentage, and how long is left at the current speed.
 
 ### Variables
 
@@ -66,6 +94,10 @@ Put live numbers on a button instead of a fixed label:
 | `$(streamgraphics-pro:preset_<name>_row)` | which spreadsheet row is showing |
 | `$(streamgraphics-pro:preset_<name>_label)` | that row's label |
 | `$(streamgraphics-pro:bl_count)` | baseball count, e.g. `2-1` |
+| `$(streamgraphics-pro:prompter_section)` | the section being read right now |
+| `$(streamgraphics-pro:prompter_percent)` | how far through the script |
+| `$(streamgraphics-pro:prompter_left)` | time left at the current speed |
+| `$(streamgraphics-pro:prompter_speed)` | prompter speed |
 | `$(streamgraphics-pro:connection)` | connected / disconnected |
 
 Names become variable ids in lower case with anything awkward turned into an

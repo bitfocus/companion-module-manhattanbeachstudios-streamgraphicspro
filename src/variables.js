@@ -40,6 +40,43 @@ export function timerMs(timer, clockOffset) {
 	return (timer.baseMs || 0) - since
 }
 
+/**
+ * Where the teleprompter has actually got to, right now.
+ *
+ * 🚨 The app does NOT push a position as it scrolls, and it is right not to: it pushes an
+ * anchor and a speed, and every screen works out its own frame from those. So does this. A
+ * module that waited for a position update would show a frozen number all the way through a
+ * five-minute read — which looks exactly like a crash to the person watching the button.
+ *
+ * This is the same arithmetic as livePromptPx() in the app, deliberately duplicated rather
+ * than shared, because the two are separate programs on separate computers.
+ */
+export function prompterPx(p, clockOffset) {
+	if (!p) return 0
+	const now = Date.now() + (clockOffset || 0)
+	const px = (p.basePx || 0) + (p.running && p.speed > 0 ? ((now - (p.anchorServer || 0)) * p.speed) / 1000 : 0)
+	const max = prompterMaxPx(p)
+	if (!(px > 0)) return 0
+	return max >= 0 && px > max ? max : px
+}
+
+/** How long the script is, in the same units. -1 while no screen has measured it yet. */
+export function prompterMaxPx(p) {
+	return p?.geom?.sig ? Math.max(0, p.geom.total || 0) : -1
+}
+
+/** The bookmark the read is inside — the last one it has passed, not the next one coming. */
+export function prompterSection(p, clockOffset) {
+	const marks = p?.geom?.marks ?? []
+	if (!marks.length) return { index: -1, name: '', count: 0 }
+	const px = prompterPx(p, clockOffset)
+	let i = -1
+	// A small tolerance: landing exactly on a bookmark should read as being IN it, and the
+	// position is a float that will not land on an integer y.
+	for (let k = 0; k < marks.length; k++) if (px + 1 >= (marks[k].y || 0)) i = k
+	return { index: i, name: i >= 0 ? marks[i].name : '', count: marks.length }
+}
+
 export function updateVariableDefinitions(self) {
 	const defs = [
 		{ variableId: 'connection', name: 'Connection to StreamGraphics Pro' },
@@ -53,6 +90,14 @@ export function updateVariableDefinitions(self) {
 		{ variableId: 'bl_inning', name: 'Baseball — inning (e.g. Top 3)' },
 		{ variableId: 'bl_count', name: 'Baseball — count (e.g. 2-1)' },
 		{ variableId: 'bl_outs', name: 'Baseball — outs' },
+		{ variableId: 'prompter_onair', name: 'Teleprompter — on air?' },
+		{ variableId: 'prompter_state', name: 'Teleprompter — rolling / holding' },
+		{ variableId: 'prompter_speed', name: 'Teleprompter — speed (pixels a second)' },
+		{ variableId: 'prompter_percent', name: 'Teleprompter — how far through the script, as a percentage' },
+		{ variableId: 'prompter_section', name: 'Teleprompter — the section being read' },
+		{ variableId: 'prompter_section_n', name: 'Teleprompter — section number' },
+		{ variableId: 'prompter_sections', name: 'Teleprompter — sections in the script' },
+		{ variableId: 'prompter_left', name: 'Teleprompter — time left at the current speed' },
 	]
 
 	for (const b of self.state.scoreboards ?? []) {
@@ -102,6 +147,22 @@ export function updateVariableValues(self) {
 		bl_count: st.baseball ? `${st.baseball.balls ?? 0}-${st.baseball.strikes ?? 0}` : '',
 		bl_outs: st.baseball?.outs ?? 0,
 	}
+
+	// ---- teleprompter ----
+	const p = st.prompter
+	const max = prompterMaxPx(p)
+	const px = prompterPx(p, self.clockOffset)
+	const sec = prompterSection(p, self.clockOffset)
+	v.prompter_onair = p?.visible ? 'ON AIR' : 'off'
+	v.prompter_state = p?.running ? 'rolling' : 'holding'
+	v.prompter_speed = Math.round(p?.speed ?? 0)
+	// Until a prompter screen is open nothing has measured the script, so there is no length
+	// and therefore no percentage. Showing 0% would be a lie; showing nothing is honest.
+	v.prompter_percent = max > 0 ? Math.min(100, Math.round((px / max) * 100)) : ''
+	v.prompter_section = sec.name
+	v.prompter_section_n = sec.index >= 0 ? sec.index + 1 : 0
+	v.prompter_sections = sec.count
+	v.prompter_left = max > 0 && (p?.speed ?? 0) > 0 ? fmtTime(((max - px) / p.speed) * 1000) : ''
 
 	for (const b of st.scoreboards ?? []) {
 		const k = slug(b.name)

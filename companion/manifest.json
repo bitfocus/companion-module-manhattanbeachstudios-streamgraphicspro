@@ -4,8 +4,8 @@
 	"id": "streamgraphics-pro",
 	"name": "streamgraphics-pro",
 	"shortname": "StreamGraphics Pro",
-	"description": "Live broadcast graphics \u2014 lower thirds, scoreboards, timers and slides. Runs on the show computer; drive it from Companion.",
-	"version": "1.1.0",
+	"description": "Live broadcast graphics \u2014 lower thirds, scoreboards, timers, slides and a teleprompter. Runs on the show computer; drive it from Companion.",
+	"version": "1.2.0",
 	"license": "MIT",
 	"repository": "https://github.com/moishe64/companion-module-streamgraphics-pro",
 	"bugs": "https://github.com/moishe64/companion-module-streamgraphics-pro/issues",
@@ -31,6 +31,8 @@
 		"Scoreboard",
 		"Timer",
 		"Lower third",
+		"Teleprompter",
+		"Prompter",
 		"OBS",
 		"vMix"
 	]

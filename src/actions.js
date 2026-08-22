@@ -12,6 +12,7 @@ const q = (s) => encodeURIComponent(String(s ?? ''))
 export function updateActions(self) {
 	const presets = self.choices.presets
 	const boards = self.choices.scoreboards
+	const marks = self.choices.marks
 
 	const presetField = {
 		type: 'dropdown',
@@ -252,5 +253,145 @@ export function updateActions(self) {
 		},
 		bl_show: { name: 'Baseball: on air', options: [], callback: async () => self.command('/api/baseball/show') },
 		bl_hide: { name: 'Baseball: off air', options: [], callback: async () => self.command('/api/baseball/hide') },
+
+		// ---- Teleprompter ----
+		// Two separate ideas that are easy to confuse, so the names say which is which:
+		// ON AIR / OFF AIR is whether the prompter is being shown at all, and ROLL / HOLD is
+		// whether the script is moving. A presenter can be looking at a held script perfectly
+		// happily, and stopping the scroll should never take their words off the screen.
+		prompter_air: {
+			name: 'Teleprompter: on air',
+			options: [],
+			callback: async () => self.command('/api/prompter/air'),
+		},
+		prompter_off: {
+			name: 'Teleprompter: off air',
+			options: [],
+			callback: async () => self.command('/api/prompter/off'),
+		},
+		prompter_play: {
+			name: 'Teleprompter: roll',
+			options: [],
+			callback: async () => self.command('/api/prompter/play'),
+		},
+		prompter_pause: {
+			name: 'Teleprompter: hold',
+			options: [],
+			callback: async () => self.command('/api/prompter/pause'),
+		},
+		prompter_toggle: {
+			name: 'Teleprompter: roll / hold',
+			options: [],
+			callback: async () => self.command('/api/prompter/toggle'),
+		},
+		prompter_faster: {
+			name: 'Teleprompter: speed up',
+			options: [
+				{
+					type: 'textinput',
+					label: 'By how much',
+					id: 'by',
+					default: '5',
+					useVariables: true,
+					tooltip: 'Speed is in pixels a second, the same number the app shows. 5 is one nudge.',
+				},
+			],
+			callback: async (a) => {
+				const v = parseFloat(await self.parseVariablesInString(String(a.options.by ?? '5')))
+				return self.command(`/api/prompter/faster?by=${isNaN(v) ? 5 : v}`)
+			},
+		},
+		prompter_slower: {
+			name: 'Teleprompter: slow down',
+			options: [
+				{ type: 'textinput', label: 'By how much', id: 'by', default: '5', useVariables: true },
+			],
+			callback: async (a) => {
+				const v = parseFloat(await self.parseVariablesInString(String(a.options.by ?? '5')))
+				return self.command(`/api/prompter/slower?by=${isNaN(v) ? 5 : v}`)
+			},
+		},
+		prompter_speed: {
+			name: 'Teleprompter: set the speed',
+			options: [
+				{
+					type: 'textinput',
+					label: 'Speed (pixels a second)',
+					id: 'value',
+					default: '60',
+					useVariables: true,
+					tooltip: 'Useful on a rehearsed show: one button that always returns to the speed you settled on',
+				},
+			],
+			callback: async (a) => {
+				const v = parseFloat(await self.parseVariablesInString(String(a.options.value ?? '')))
+				if (isNaN(v)) return
+				return self.command(`/api/prompter/speed?value=${v}`)
+			},
+		},
+		prompter_back: {
+			name: 'Teleprompter: nudge back',
+			options: [],
+			callback: async () => self.command('/api/prompter/back'),
+		},
+		prompter_ahead: {
+			name: 'Teleprompter: nudge ahead',
+			options: [],
+			callback: async () => self.command('/api/prompter/ahead'),
+		},
+		prompter_top: {
+			name: 'Teleprompter: back to the top',
+			options: [],
+			callback: async () => self.command('/api/prompter/top'),
+		},
+		prompter_nextmark: {
+			name: 'Teleprompter: next bookmark',
+			options: [],
+			callback: async () => self.command('/api/prompter/nextmark'),
+		},
+		prompter_prevmark: {
+			name: 'Teleprompter: previous bookmark',
+			options: [],
+			callback: async () => self.command('/api/prompter/prevmark'),
+		},
+		prompter_mark: {
+			name: 'Teleprompter: jump to a bookmark',
+			options: [
+				{
+					type: 'dropdown',
+					label: 'Bookmark',
+					id: 'name',
+					default: marks[0]?.id ?? '',
+					choices: marks,
+					allowCustom: true,
+					// 🚨 By NAME on purpose. A script gets rewritten an hour before the show and every
+					// section shifts position; addressing by number would silently send the button to
+					// the wrong part of the script, which is the worst kind of wrong on air.
+					tooltip: 'The heading as written in the script. It keeps working after the script is rewritten.',
+				},
+			],
+			callback: async (a) => {
+				const nm = await name(a.options.name)
+				if (!nm) return
+				return self.command(`/api/prompter/mark?name=${q(nm)}`)
+			},
+		},
+		prompter_mark_n: {
+			name: 'Teleprompter: jump to bookmark by number',
+			options: [
+				{
+					type: 'textinput',
+					label: 'Bookmark number (1 = first)',
+					id: 'n',
+					default: '1',
+					useVariables: true,
+					tooltip: 'Use this only when the script is fixed. Otherwise jump by name.',
+				},
+			],
+			callback: async (a) => {
+				const n = parseInt(await self.parseVariablesInString(String(a.options.n ?? '1')), 10)
+				return self.command(`/api/prompter/mark?n=${isNaN(n) ? 1 : n}`)
+			},
+		},
 	})
 }
