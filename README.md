@@ -13,10 +13,15 @@ There are three routes, in the order you'd actually want them.
 
 ### 1. From Companion's module list — the eventual answer for end users
 
-Once this module is accepted into the Bitfocus module repository, users search for
-"StreamGraphics Pro" in Companion's Modules page and click install. Nothing to
-download, nothing to unzip, and updates arrive on their own. Submitting it is a
-pull request against `bitfocus/companion-module-*` plus a review.
+Once this module is accepted into the Bitfocus module list, users search for it inside
+Companion and install it from there — nothing to download, nothing to unzip, and updates
+arrive on their own.
+
+**How submission actually works** (checked against Bitfocus's own repos, Aug 2026): it is not
+a blind pull request. `bitfocus/companion-bundled-modules` says to post in the
+**#module-development** channel of the Bitfocus Slack, and `bitfocus/companion-module-requests`
+tracks requests. So the route is: public repo → introduce it in that Slack channel → they
+review and pull it in.
 
 Until that's done, use one of the two below.
 
