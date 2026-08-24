@@ -13,6 +13,7 @@ export function updateActions(self) {
 	const presets = self.choices.presets
 	const boards = self.choices.scoreboards
 	const marks = self.choices.marks
+	const scripts = self.choices.scripts ?? []
 
 	const presetField = {
 		type: 'dropdown',
@@ -374,6 +375,30 @@ export function updateActions(self) {
 				const nm = await name(a.options.name)
 				if (!nm) return
 				return self.command(`/api/prompter/mark?name=${q(nm)}`)
+			},
+		},
+		prompter_script: {
+			name: 'Teleprompter: load a saved script',
+			options: [
+				{
+					type: 'dropdown',
+					label: 'Saved script',
+					id: 'name',
+					default: scripts[0]?.id ?? '',
+					choices: scripts,
+					allowCustom: true,
+					// 🚨 By NAME, like everything else here. The list is what the operator saved in
+					// the app, so a button built today still points at the right script next week.
+					tooltip: 'The name you saved it under in the app. One button per segment works well.',
+				},
+			],
+			callback: async (a) => {
+				const nm = await name(a.options.name)
+				if (!nm) return
+				/* Deliberately NOT silent on a bad name. The app answers 404 and lists what it does
+				 * have, and self.command surfaces that in the log — a button that quietly does
+				 * nothing mid-show is the worst possible failure for this particular action. */
+				return self.command(`/api/prompter/script?name=${q(nm)}`)
 			},
 		},
 		prompter_mark_n: {

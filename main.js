@@ -9,7 +9,7 @@ class StreamGraphicsProInstance extends InstanceBase {
 	async init(config) {
 		this.config = config
 		this.state = {}
-		this.choices = { presets: [], scoreboards: [], marks: [] }
+		this.choices = { presets: [], scoreboards: [], marks: [], scripts: [] }
 		this.connected = false
 		this.appVersion = ''
 		this.clockOffset = 0
@@ -108,6 +108,9 @@ class StreamGraphicsProInstance extends InstanceBase {
 			(state.shows ?? []).map((s) => s.name),
 			(state.scoreboards ?? []).map((b) => b.name),
 			(state.prompter?.geom?.marks ?? []).map((m) => m.name),
+			// Saved scripts are named by the operator and change between shows, so a new one
+			// has to reach the dropdowns without them restarting Companion.
+			(state.scripts ?? []).map((s) => s.name),
 		])
 		if (key !== this.namesKey) {
 			this.namesKey = key
@@ -133,6 +136,9 @@ class StreamGraphicsProInstance extends InstanceBase {
 			// Bookmarks are the ## headings in the script, so they appear and vanish as the script
 			// is edited. Addressed by name everywhere, which is why the id IS the name.
 			marks: (this.state.prompter?.geom?.marks ?? []).map((m) => ({ id: m.name, label: m.name })),
+			// Saved scripts, addressed by name for the same reason as bookmarks: the name is
+			// what the operator typed and what they built the button around.
+			scripts: (this.state.scripts ?? []).map((s) => ({ id: s.name, label: s.name })),
 		}
 		updateActions(this)
 		updateFeedbacks(this)

@@ -54,6 +54,7 @@ const self = {
 			presets: (state.shows ?? []).map((s) => ({ id: s.name, label: s.name })),
 			scoreboards: (state.scoreboards ?? []).map((b) => ({ id: b.name, label: b.name })),
 			marks: (state.prompter?.geom?.marks ?? []).map((m) => ({ id: m.name, label: m.name })),
+			scripts: (state.scripts ?? []).map((s) => ({ id: s.name, label: s.name })),
 		}
 		/* Rebuild when the NAMES change, exactly as main.js does. Bookmarks arrive late — they
 		   do not exist until a prompter screen has measured the script — so a harness that built
@@ -62,6 +63,7 @@ const self = {
 			this.choices.presets.map((c) => c.id),
 			this.choices.scoreboards.map((c) => c.id),
 			this.choices.marks.map((c) => c.id),
+			this.choices.scripts.map((c) => c.id),
 		])
 		if (key !== this.namesKey) {
 			this.namesKey = key
@@ -343,6 +345,76 @@ if (!bulPreset) {
 	await nextState()
 	ok('prompter off air', self.vars.prompter_onair === 'off', String(self.vars.prompter_onair))
 	ok('off-air feedback false', self.feedbacks.prompter_visible.callback({}) === false)
+}
+
+/* ---------------------------------------------------------------- the SCRIPT LIBRARY
+   🚨 The point of this section is that the library is LIVE. An operator saves a script in the
+   app during rehearsal and the button must appear in Companion without restarting anything —
+   which only works if a new script name forces a definitions rebuild. */
+{
+	const before = Object.keys(self.presets).filter((k) => k.startsWith('prompter_script_')).length
+
+	// Save two scripts through the app's own action endpoint, as the operator would in the UI.
+	const post = async (obj) => {
+		const r = await fetch(`http://${host}:${port}/action`, {
+			method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(obj),
+		})
+		return r.ok
+	}
+	await post({ type: 'pr_script', text: '## Segment one\nFirst script body.\n' })
+	await post({ type: 'pr_lib_save', name: 'Harness Alpha' })
+	await post({ type: 'pr_script', text: '## Segment two\nSecond script body.\n' })
+	await post({ type: 'pr_lib_save', name: 'Harness Beta' })
+	await nextState(); await sleep(400); await nextState()
+
+	ok('saved scripts reach the module', (self.state.scripts ?? []).length >= 2,
+		JSON.stringify((self.state.scripts ?? []).map((s) => s.name)))
+	ok('the module never receives the script TEXT, only the list',
+		!(self.state.scripts ?? []).some((s) => 'text' in s),
+		JSON.stringify(Object.keys((self.state.scripts ?? [])[0] ?? {})))
+
+	const after = Object.keys(self.presets).filter((k) => k.startsWith('prompter_script_')).length
+	ok('a script saved in the app creates a ready-made button with no restart', after > before,
+		`${before} -> ${after}`)
+
+	ok('the load action exists', typeof self.actions.prompter_script?.callback === 'function')
+	ok('its dropdown is filled from the library',
+		(self.actions.prompter_script.options[0].choices ?? []).some((c) => c.id === 'Harness Alpha'))
+
+	ok('the variable names the loaded script', self.vars.prompter_script === 'Harness Beta',
+		String(self.vars.prompter_script))
+	ok('and says it matches what was saved', self.vars.prompter_script_state === 'saved',
+		String(self.vars.prompter_script_state))
+	ok('the feedback lights the loaded one',
+		self.feedbacks.prompter_script_loaded.callback({ options: { name: 'Harness Beta' } }) === true)
+	ok('and not the other one',
+		self.feedbacks.prompter_script_loaded.callback({ options: { name: 'Harness Alpha' } }) === false)
+
+	// 🚨 Load BY NAME — the whole feature. A Stream Deck knows names, never ids.
+	await self.actions.prompter_script.callback({ options: { name: 'Harness Alpha' } })
+	await nextState(); await sleep(300); await nextState()
+	ok('loading by name puts that script on air', /First script body/.test(String(self.state.prompter?.script)),
+		String(self.state.prompter?.script).slice(0, 40))
+	ok('and the variable follows', self.vars.prompter_script === 'Harness Alpha', String(self.vars.prompter_script))
+	ok('and the feedback moves with it',
+		self.feedbacks.prompter_script_loaded.callback({ options: { name: 'Harness Alpha' } }) === true)
+
+	// Editing on air must show as edited, so nobody goes to air on a stale copy unknowingly.
+	await post({ type: 'pr_script', text: '## Segment one\nFirst script body, changed.\n' })
+	await nextState(); await sleep(300); await nextState()
+	ok('an on-air edit shows as edited', self.vars.prompter_script_state === 'edited',
+		String(self.vars.prompter_script_state))
+
+	// 🚨 A name that does not exist must FAIL LOUDLY, not quietly do nothing.
+	const okBad = await self.command('/api/prompter/script?name=No%20Such%20Script')
+	ok('a button pointing at a deleted script reports failure rather than silently doing nothing',
+		okBad === false, String(okBad))
+
+	// tidy up so repeated runs do not pile up
+	for (const s of self.state.scripts ?? []) {
+		if (/^Harness /.test(s.name)) await post({ type: 'pr_lib_delete', id: s.id })
+	}
+	await nextState()
 }
 
 self.api.close()

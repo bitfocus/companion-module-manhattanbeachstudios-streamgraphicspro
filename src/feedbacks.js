@@ -18,6 +18,7 @@ export function updateFeedbacks(self) {
 	const presets = self.choices.presets
 	const boards = self.choices.scoreboards
 	const marks = self.choices.marks
+	const scripts = self.choices.scripts ?? []
 
 	self.setFeedbackDefinitions({
 		preset_on: {
@@ -126,6 +127,30 @@ export function updateFeedbacks(self) {
 				const nm = String(fb.options.name ?? '').trim()
 				if (!nm) return false
 				return eq(prompterSection(self.state.prompter, self.clockOffset).name, nm)
+			},
+		},
+
+		prompter_script_loaded: {
+			type: 'boolean',
+			name: 'This saved script is the one loaded',
+			/* With one button per script, this is what tells the operator which one is up without
+			   reading the wall. Pairs with the load action on the same button. */
+			description: 'Lights the button for whichever saved script is currently on the prompter',
+			defaultStyle: { bgcolor: GREEN, color: BLACK },
+			options: [
+				{
+					type: 'dropdown',
+					label: 'Saved script',
+					id: 'name',
+					default: scripts[0]?.id ?? '',
+					choices: scripts,
+					allowCustom: true,
+				},
+			],
+			callback: (fb) => {
+				const nm = String(fb.options.name ?? '').trim()
+				if (!nm) return false
+				return eq(self.state.prompter?.libName ?? '', nm)
 			},
 		},
 

@@ -98,6 +98,8 @@ export function updateVariableDefinitions(self) {
 		{ variableId: 'prompter_section_n', name: 'Teleprompter — section number' },
 		{ variableId: 'prompter_sections', name: 'Teleprompter — sections in the script' },
 		{ variableId: 'prompter_left', name: 'Teleprompter — time left at the current speed' },
+		{ variableId: 'prompter_script', name: 'Teleprompter — the saved script that is loaded' },
+		{ variableId: 'prompter_script_state', name: 'Teleprompter — whether the loaded script has unsaved edits' },
 	]
 
 	for (const b of self.state.scoreboards ?? []) {
@@ -163,6 +165,10 @@ export function updateVariableValues(self) {
 	v.prompter_section_n = sec.index >= 0 ? sec.index + 1 : 0
 	v.prompter_sections = sec.count
 	v.prompter_left = max > 0 && (p?.speed ?? 0) > 0 ? fmtTime(((max - px) / p.speed) * 1000) : ''
+	/* Blank, not "none", when the script on air was never saved — an operator glancing at a
+	   button wants the name of the script or nothing, and a word like "none" reads as a state. */
+	v.prompter_script = p?.libName ?? ''
+	v.prompter_script_state = p?.libName ? (p.libDirty ? 'edited' : 'saved') : ''
 
 	for (const b of st.scoreboards ?? []) {
 		const k = slug(b.name)

@@ -411,5 +411,22 @@ export function updatePresets(self) {
 		}
 	}
 
+	// One button per SAVED SCRIPT, so a show with several segments gets a row of scripts that
+	// lights up whichever one is loaded. Generated from the library, so saving a new script in
+	// the app puts a new button here without anyone touching Companion.
+	for (const sc of self.state.scripts ?? []) {
+		if (!sc?.name) continue
+		presets[`prompter_script_${slug(sc.name)}`] = {
+			type: 'button',
+			category: 'Teleprompter — saved scripts',
+			name: `Load “${sc.name}”`,
+			style: style(sc.name, DARK, WHITE, '7'),
+			steps: [{ down: [{ actionId: 'prompter_script', options: { name: sc.name } }], up: [] }],
+			feedbacks: [
+				{ feedbackId: 'prompter_script_loaded', options: { name: sc.name }, style: { bgcolor: GREEN, color: BLACK } },
+			],
+		}
+	}
+
 	self.setPresetDefinitions(presets)
 }
