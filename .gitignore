@@ -1,5 +1,9 @@
 node_modules/
+# Bitfocus's build REJECTS a package-lock.json outright and REQUIRES a committed yarn.lock,
+# so this stays ignored and yarn.lock is tracked. Do not swap them back.
 package-lock.json
+/.yarn
 *.log
 pkg/
 *.tgz
+DEBUG-*

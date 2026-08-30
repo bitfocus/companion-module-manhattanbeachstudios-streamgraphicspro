@@ -1,25 +1,27 @@
 {
   "$schema": "https://raw.githubusercontent.com/bitfocus/companion-module-base/main/assets/manifest.schema.json",
   "type": "connection",
-  "id": "streamgraphics-pro",
-  "name": "streamgraphics-pro",
-  "shortname": "StreamGraphics Pro",
+  "id": "manhattanbeachstudios-streamgraphicspro",
+  "name": "StreamGraphics Pro",
+  "shortname": "streamgraphicspro",
   "description": "Live broadcast graphics — lower thirds, scoreboards, timers, slides and a teleprompter. Runs on the show computer; drive it from Companion.",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "license": "MIT",
-  "repository": "https://github.com/moishe64/companion-module-streamgraphics-pro",
-  "bugs": "https://github.com/moishe64/companion-module-streamgraphics-pro/issues",
+  "repository": "https://github.com/bitfocus/companion-module-manhattanbeachstudios-streamgraphicspro",
+  "bugs": "https://github.com/bitfocus/companion-module-manhattanbeachstudios-streamgraphicspro/issues",
   "maintainers": [
     {
       "name": "Manhattan Beach Studios LLC",
       "email": "mark@streamgraphicspro.com"
     }
   ],
-  "legacyIds": [],
+  "legacyIds": [
+    "streamgraphics-pro"
+  ],
   "runtime": {
     "type": "node22",
     "api": "nodejs-ipc",
-    "apiVersion": "1.14.1",
+    "apiVersion": "0.0.0",
     "entrypoint": "../main.js"
   },
   "manufacturer": "Manhattan Beach Studios",

@@ -40,6 +40,10 @@ class StreamGraphicsProInstance extends InstanceBase {
 
 	async configUpdated(config) {
 		this.config = config
+		// This hook is also how a RENAME arrives: the framework sets the new label before calling
+		// it. The presets embed that label in their variable references, so they have to be
+		// rebuilt here or every button dragged in after a rename would read from the old name.
+		this.rebuildDefinitions()
 		this.api.close()
 		this.connected = false
 		this.updateStatus(InstanceStatus.Connecting)

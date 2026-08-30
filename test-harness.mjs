@@ -21,6 +21,11 @@ const ok = (label, cond, extra = '') => {
 
 const self = {
 	config: { host, port },
+	/* Companion hands the module the CONNECTION's label and keeps it current. The presets embed
+	   it in their variable references, so a stub without one would quietly build `$(undefined:…)`
+	   and every check below would still pass. Deliberately NOT the module id or anything a
+	   default would produce — if a prefix is ever baked in again, this value will not match it. */
+	label: 'sgp-harness-label',
 	state: {},
 	choices: { presets: [], scoreboards: [] },
 	connected: false,
@@ -172,11 +177,24 @@ ok('connected feedback true', self.feedbacks.connected.callback({}) === true)
 // --- preset buttons reference variables that really exist ---------------
 const known = new Set(self.varDefs.map((d) => d.variableId))
 let bad = []
+let wrongPrefix = []
+let refs = 0
 for (const [id, p] of Object.entries(self.presets)) {
-	for (const m of String(p.style?.text ?? '').matchAll(/\$\(streamgraphics-pro:([a-z0-9_]+)\)/g)) {
-		if (!known.has(m[1])) bad.push(`${id} -> ${m[1]}`)
+	// Capture the PREFIX rather than assuming it. The old version of this check matched a fixed
+	// `streamgraphics-pro:`; once the prefix changed it matched nothing at all and passed while
+	// testing nothing — which is why `refs` is asserted below.
+	for (const m of String(p.style?.text ?? '').matchAll(/\$\(([^:)]+):([a-z0-9_]+)\)/g)) {
+		refs++
+		if (m[1] !== self.label) wrongPrefix.push(`${id} -> $(${m[1]}:…)`)
+		if (!known.has(m[2])) bad.push(`${id} -> ${m[2]}`)
 	}
 }
+ok('preset buttons actually reference variables', refs > 0, `${refs} references`)
+ok(
+	'every variable reference is namespaced by the connection label',
+	wrongPrefix.length === 0,
+	wrongPrefix.slice(0, 5).join(', '),
+)
 ok('every variable used on a preset button is defined', bad.length === 0, bad.join(', '))
 
 // Button text needs REAL newlines. A literal backslash-n prints as "\n" on the key.

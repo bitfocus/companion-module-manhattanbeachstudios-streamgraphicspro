@@ -1,4 +1,4 @@
-# companion-module-streamgraphics-pro
+# companion-module-manhattanbeachstudios-streamgraphicspro
 
 Bitfocus Companion module for [StreamGraphics Pro](https://www.streamgraphicspro.com) —
 live broadcast graphics for OBS, vMix and any browser source.
@@ -11,23 +11,29 @@ in real time rather than being polled.
 
 There are three routes, in the order you'd actually want them.
 
-### 1. From Companion's module list — the eventual answer for end users
+### 1. From Companion's module list — the answer for end users
 
-Once this module is accepted into the Bitfocus module list, users search for it inside
-Companion and install it from there — nothing to download, nothing to unzip, and updates
-arrive on their own.
+Once a version of this module is published, users search for it inside Companion and
+install it from there — nothing to download, nothing to unzip, and updates arrive on
+their own.
 
-**How submission actually works** (checked against Bitfocus's own repos, Aug 2026): it is not
-a blind pull request. `bitfocus/companion-bundled-modules` says to post in the
-**#module-development** channel of the Bitfocus Slack, and `bitfocus/companion-module-requests`
-tracks requests. So the route is: public repo → introduce it in that Slack channel → they
-review and pull it in.
+**How submission works** (checked against Bitfocus's own repos, Aug 2026): it is not a blind
+pull request. You introduce the module in the **#module-development** channel of the Bitfocus
+Slack; a maintainer creates the repository under the `bitfocus` organisation; you push the
+code and a `v`-prefixed tag there; then developer.bitfocus.io → **My Connections** →
+**Submit Version** picks that tag up for review.
 
-Until that's done, use one of the two below.
+The module id in `companion/manifest.json` MUST equal the repository name with
+`companion-module-` removed — `manhattanbeachstudios-streamgraphicspro` here. Bitfocus's
+build workflow compares the two and stops with `Module manifest.json id does not match
+github repository name` if they differ. The same workflow rejects a `package-lock.json`,
+requires a committed `yarn.lock`, and requires `@companion-module/tools` 2.8.0 or newer.
+
+Until a version is published, use one of the two below.
 
 ### 2. The packaged `.tgz` — one file for an end user
 
-`npm run package` produces `streamgraphics-pro-<version>.tgz`. That is Companion's
+`yarn package` produces `manhattanbeachstudios-streamgraphicspro-<version>.tgz`. That is Companion's
 own package format: bundled code, manifest and help in a single file.
 
 In Companion, open the **Modules** page and use the option to import/install a
@@ -40,7 +46,7 @@ as it is.
 ### 3. Developer modules path — always works
 
 1. Unzip the source folder somewhere permanent, e.g.
-   `C:\companion-modules\streamgraphics-pro`.
+   `C:\companion-modules\streamgraphicspro`.
 2. In Companion, open **Settings → Developer modules path** and point it at the
    **parent** folder — `C:\companion-modules`, *not* the module folder itself.
    This is the step people get wrong.
@@ -79,13 +85,20 @@ rebuild of the show file.
 
 ## Development
 
+Yarn, not npm — Bitfocus's build fails outright if it finds a `package-lock.json`, and
+fails again if `yarn.lock` is missing. `corepack enable` once, then:
+
 ```bash
-npm install --legacy-peer-deps      # the tools package has a loose eslint peer range
-npm run check                       # syntax check + validate companion/manifest.json
-npm run test:live -- <host> <port>  # drive the module against a running app
-npm run package                     # build streamgraphics-pro-<version>.tgz
-npm run package:check               # Companion's own module checker
+yarn install                        # writes yarn.lock; commit it
+yarn check                          # syntax check + validate companion/manifest.json
+yarn test:live <host> <port>        # drive the module against a running app
+yarn package                        # build manhattanbeachstudios-streamgraphicspro-<version>.tgz
+yarn package:check                  # Companion's own module checker
 ```
+
+`runtime.apiVersion` is `0.0.0` in the repo on purpose: the build stamps the real
+`@companion-module/base` version into the packaged manifest, and every module in the
+Bitfocus org keeps `0.0.0` in source.
 
 Targets `@companion-module/base` **1.x**, which is what shipping Companion 3.x
 runs. 2.x exists but is a breaking rewrite for Companion 4 — it drops

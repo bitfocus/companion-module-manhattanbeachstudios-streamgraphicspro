@@ -83,22 +83,25 @@ percentage, and how long is left at the current speed.
 
 ### Variables
 
-Put live numbers on a button instead of a fixed label:
+Put live numbers on a button instead of a fixed label. Write a variable as
+`$(connection:name)`, where `connection` is the name you gave this connection on
+Companion's Connections page — the variables panel will insert the right prefix for
+you if you pick one from the list.
 
-| Variable | What it is |
+| Variable name | What it is |
 |---|---|
-| `$(streamgraphics-pro:sb_court_1_score1)` | team 1's score in the current game on Court 1 |
-| `$(streamgraphics-pro:sb_court_1_team1)` | team 1's name |
-| `$(streamgraphics-pro:sb_court_1_game)` | which game/set is up |
-| `$(streamgraphics-pro:timer_time)` | the presenter clock, ticking |
-| `$(streamgraphics-pro:preset_<name>_row)` | which spreadsheet row is showing |
-| `$(streamgraphics-pro:preset_<name>_label)` | that row's label |
-| `$(streamgraphics-pro:bl_count)` | baseball count, e.g. `2-1` |
-| `$(streamgraphics-pro:prompter_section)` | the section being read right now |
-| `$(streamgraphics-pro:prompter_percent)` | how far through the script |
-| `$(streamgraphics-pro:prompter_left)` | time left at the current speed |
-| `$(streamgraphics-pro:prompter_speed)` | prompter speed |
-| `$(streamgraphics-pro:connection)` | connected / disconnected |
+| `sb_court_1_score1` | team 1's score in the current game on Court 1 |
+| `sb_court_1_team1` | team 1's name |
+| `sb_court_1_game` | which game/set is up |
+| `timer_time` | the presenter clock, ticking |
+| `preset_<name>_row` | which spreadsheet row is showing |
+| `preset_<name>_label` | that row's label |
+| `bl_count` | baseball count, e.g. `2-1` |
+| `prompter_section` | the section being read right now |
+| `prompter_percent` | how far through the script |
+| `prompter_left` | time left at the current speed |
+| `prompter_speed` | prompter speed |
+| `connection` | connected / disconnected |
 
 Names become variable ids in lower case with anything awkward turned into an
 underscore — `Court 1` becomes `court_1`, `Marcus Bell — Head Coach` becomes

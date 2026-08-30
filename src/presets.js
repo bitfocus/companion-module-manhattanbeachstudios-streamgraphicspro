@@ -22,6 +22,12 @@ const style = (text, bg = DARK, color = WHITE, size = '14') => ({
 	bgcolor: bg,
 })
 
+/* 🚨 Variable references below are written `$(${self.label}:name)`, NOT with a fixed prefix.
+   Companion namespaces variables by the CONNECTION's label — the name the operator gave this
+   connection — and that is theirs to change at any time. A prefix baked in here matches only
+   the default name on the machine it was written on; anywhere else the dragged-in button shows
+   an empty value and nothing explains why. `self.label` is kept current by the framework, and
+   configUpdated() rebuilds these definitions, so a rename re-issues the presets correctly. */
 export function updatePresets(self) {
 	const presets = {}
 
@@ -58,7 +64,7 @@ export function updatePresets(self) {
 				type: 'button',
 				category: 'Library presets',
 				name: `${s.name} — next row`,
-				style: style(`${s.name}\n▶ NEXT\n$(streamgraphics-pro:preset_${k}_row)/$(streamgraphics-pro:preset_${k}_rows)`, DARK, WHITE, '7'),
+				style: style(`${s.name}\n▶ NEXT\n$(${self.label}:preset_${k}_row)/$(${self.label}:preset_${k}_rows)`, DARK, WHITE, '7'),
 				steps: [{ down: [{ actionId: 'preset_next', options: { name: s.name } }], up: [] }],
 				feedbacks: [],
 			}
@@ -81,7 +87,7 @@ export function updatePresets(self) {
 				category: cat,
 				name: `${s.name} — next bullet`,
 				style: style(
-					`${s.name}\n▶ NEXT\n$(streamgraphics-pro:preset_${k}_bullet)/$(streamgraphics-pro:preset_${k}_bullets)`,
+					`${s.name}\n▶ NEXT\n$(${self.label}:preset_${k}_bullet)/$(${self.label}:preset_${k}_bullets)`,
 					GREEN,
 					BLACK,
 					'7'
@@ -145,7 +151,7 @@ export function updatePresets(self) {
 			type: 'button',
 			category: cat,
 			name: `${b.name} — point team 1`,
-			style: style(`$(streamgraphics-pro:sb_${k}_team1)\n+1\n$(streamgraphics-pro:sb_${k}_score1)`, BLUE, WHITE, '7'),
+			style: style(`$(${self.label}:sb_${k}_team1)\n+1\n$(${self.label}:sb_${k}_score1)`, BLUE, WHITE, '7'),
 			steps: [{ down: [{ actionId: 'sb_point', options: { name: b.name, team: '1', delta: '1' } }], up: [] }],
 			feedbacks: [],
 		}
@@ -153,7 +159,7 @@ export function updatePresets(self) {
 			type: 'button',
 			category: cat,
 			name: `${b.name} — point team 2`,
-			style: style(`$(streamgraphics-pro:sb_${k}_team2)\n+1\n$(streamgraphics-pro:sb_${k}_score2)`, BLUE, WHITE, '7'),
+			style: style(`$(${self.label}:sb_${k}_team2)\n+1\n$(${self.label}:sb_${k}_score2)`, BLUE, WHITE, '7'),
 			steps: [{ down: [{ actionId: 'sb_point', options: { name: b.name, team: '2', delta: '1' } }], up: [] }],
 			feedbacks: [],
 		}
@@ -177,7 +183,7 @@ export function updatePresets(self) {
 			type: 'button',
 			category: cat,
 			name: `${b.name} — next game/set`,
-			style: style(`NEXT\nGAME\n$(streamgraphics-pro:sb_${k}_game)`, DARK, WHITE, '7'),
+			style: style(`NEXT\nGAME\n$(${self.label}:sb_${k}_game)`, DARK, WHITE, '7'),
 			steps: [{ down: [{ actionId: 'sb_nextgame', options: { name: b.name } }], up: [] }],
 			feedbacks: [],
 		}
@@ -199,7 +205,7 @@ export function updatePresets(self) {
 		type: 'button',
 		category: 'Presenter timer',
 		name: 'Timer start / pause',
-		style: style('START\n$(streamgraphics-pro:timer_time)', DARK, WHITE, '14'),
+		style: style(`START\n$(${self.label}:timer_time)`, DARK, WHITE, '14'),
 		steps: [
 			{ down: [{ actionId: 'timer_start', options: {} }], up: [] },
 			{ down: [{ actionId: 'timer_pause', options: {} }], up: [] },
@@ -247,7 +253,7 @@ export function updatePresets(self) {
 		type: 'button',
 		category: 'Baseball / softball',
 		name: 'Ball',
-		style: style('BALL\n$(streamgraphics-pro:bl_count)', GREEN, BLACK, '14'),
+		style: style(`BALL\n$(${self.label}:bl_count)`, GREEN, BLACK, '14'),
 		steps: [{ down: [{ actionId: 'bl_ball', options: {} }], up: [] }],
 		feedbacks: [],
 	}
@@ -255,7 +261,7 @@ export function updatePresets(self) {
 		type: 'button',
 		category: 'Baseball / softball',
 		name: 'Strike',
-		style: style('STRIKE\n$(streamgraphics-pro:bl_count)', combineRgb(180, 60, 20), WHITE, '14'),
+		style: style(`STRIKE\n$(${self.label}:bl_count)`, combineRgb(180, 60, 20), WHITE, '14'),
 		steps: [{ down: [{ actionId: 'bl_strike', options: {} }], up: [] }],
 		feedbacks: [],
 	}
@@ -263,7 +269,7 @@ export function updatePresets(self) {
 		type: 'button',
 		category: 'Baseball / softball',
 		name: 'Out',
-		style: style('OUT\n$(streamgraphics-pro:bl_outs)', RED, WHITE, '14'),
+		style: style(`OUT\n$(${self.label}:bl_outs)`, RED, WHITE, '14'),
 		steps: [{ down: [{ actionId: 'bl_out', options: {} }], up: [] }],
 		feedbacks: [],
 	}
@@ -271,7 +277,7 @@ export function updatePresets(self) {
 		type: 'button',
 		category: 'Baseball / softball',
 		name: 'Next half-inning',
-		style: style('NEXT\n$(streamgraphics-pro:bl_inning)', DARK, WHITE, '7'),
+		style: style(`NEXT\n$(${self.label}:bl_inning)`, DARK, WHITE, '7'),
 		steps: [{ down: [{ actionId: 'bl_advance', options: {} }], up: [] }],
 		feedbacks: [],
 	}
@@ -279,7 +285,7 @@ export function updatePresets(self) {
 		type: 'button',
 		category: 'Baseball / softball',
 		name: 'Run — away',
-		style: style('AWAY\n+1\n$(streamgraphics-pro:bl_score1)', BLUE, WHITE, '7'),
+		style: style(`AWAY\n+1\n$(${self.label}:bl_score1)`, BLUE, WHITE, '7'),
 		steps: [{ down: [{ actionId: 'bl_run', options: { team: '1', delta: '1' } }], up: [] }],
 		feedbacks: [],
 	}
@@ -287,7 +293,7 @@ export function updatePresets(self) {
 		type: 'button',
 		category: 'Baseball / softball',
 		name: 'Run — home',
-		style: style('HOME\n+1\n$(streamgraphics-pro:bl_score2)', BLUE, WHITE, '7'),
+		style: style(`HOME\n+1\n$(${self.label}:bl_score2)`, BLUE, WHITE, '7'),
 		steps: [{ down: [{ actionId: 'bl_run', options: { team: '2', delta: '1' } }], up: [] }],
 		feedbacks: [],
 	}
@@ -313,13 +319,13 @@ export function updatePresets(self) {
 		type: 'button',
 		category: PR,
 		name: 'Roll / hold the script',
-		style: style('ROLL\n$(streamgraphics-pro:prompter_percent)%', DARK, WHITE, '14'),
+		style: style(`ROLL\n$(${self.label}:prompter_percent)%`, DARK, WHITE, '14'),
 		steps: [{ down: [{ actionId: 'prompter_toggle', options: {} }], up: [] }],
 		feedbacks: [
 			{
 				feedbackId: 'prompter_running',
 				options: {},
-				style: { bgcolor: GREEN, color: BLACK, text: 'HOLD\n$(streamgraphics-pro:prompter_percent)%' },
+				style: { bgcolor: GREEN, color: BLACK, text: `HOLD\n$(${self.label}:prompter_percent)%` },
 			},
 		],
 	}
@@ -327,7 +333,7 @@ export function updatePresets(self) {
 		type: 'button',
 		category: PR,
 		name: 'Speed up',
-		style: style('FASTER\n$(streamgraphics-pro:prompter_speed)', DARK, WHITE, '7'),
+		style: style(`FASTER\n$(${self.label}:prompter_speed)`, DARK, WHITE, '7'),
 		steps: [{ down: [{ actionId: 'prompter_faster', options: { by: '5' } }], up: [] }],
 		feedbacks: [],
 	}
@@ -335,7 +341,7 @@ export function updatePresets(self) {
 		type: 'button',
 		category: PR,
 		name: 'Slow down',
-		style: style('SLOWER\n$(streamgraphics-pro:prompter_speed)', DARK, WHITE, '7'),
+		style: style(`SLOWER\n$(${self.label}:prompter_speed)`, DARK, WHITE, '7'),
 		steps: [{ down: [{ actionId: 'prompter_slower', options: { by: '5' } }], up: [] }],
 		feedbacks: [],
 	}
@@ -367,7 +373,7 @@ export function updatePresets(self) {
 		type: 'button',
 		category: PR,
 		name: 'Next section',
-		style: style('SECT ▶\n$(streamgraphics-pro:prompter_section)', DARK, WHITE, '7'),
+		style: style(`SECT ▶\n$(${self.label}:prompter_section)`, DARK, WHITE, '7'),
 		steps: [{ down: [{ actionId: 'prompter_nextmark', options: {} }], up: [] }],
 		feedbacks: [],
 	}
@@ -375,7 +381,7 @@ export function updatePresets(self) {
 		type: 'button',
 		category: PR,
 		name: 'Previous section',
-		style: style('◀ SECT\n$(streamgraphics-pro:prompter_section)', DARK, WHITE, '7'),
+		style: style(`◀ SECT\n$(${self.label}:prompter_section)`, DARK, WHITE, '7'),
 		steps: [{ down: [{ actionId: 'prompter_prevmark', options: {} }], up: [] }],
 		feedbacks: [],
 	}
@@ -386,7 +392,7 @@ export function updatePresets(self) {
 		category: PR,
 		name: 'Where the read is (no action)',
 		style: style(
-			'$(streamgraphics-pro:prompter_section)\n$(streamgraphics-pro:prompter_percent)%\n-$(streamgraphics-pro:prompter_left)',
+			`$(${self.label}:prompter_section)\n$(${self.label}:prompter_percent)%\n-$(${self.label}:prompter_left)`,
 			DARK,
 			WHITE,
 			'7'
